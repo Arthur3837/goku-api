@@ -13,7 +13,7 @@ app.get('/play', async (req, res) => {
         const video = search.videos[0];
         if (!video) return res.json({ erro: "Nada encontrado" });
 
-        // MOTOR DE DOWNLOAD EXTERNO (Muito mais rápido e estável)
+        // MOTOR DE DOWNLOAD EXTERNO ULTRA RÁPIDO
         const downloadUrl = `https://api.zenkey.my.id/api/download/ytmp3?url=${video.url}&apikey=zenkey`;
 
         res.json({
