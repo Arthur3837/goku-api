@@ -1,45 +1,33 @@
-const axios = require('axios');
+const express = require('express');
+const yts = require('yt-search');
+const app = express();
 
-module.exports = {
-    nome: ['play', 'play4', 'video', 'musica'],
-    async executar(sock, from, msg, args) {
-        const query = args.join(" ");
-        if (!query) return sock.sendMessage(from, { text: "⚠️ Digite o nome da música!" });
+const PORT = process.env.PORT || 8000;
 
-        const texto = (msg.message.conversation || msg.message.extendedTextMessage?.text || "").toLowerCase();
-        const ehVideo = texto.startsWith('/play4') || texto.startsWith('/video');
+app.get('/play', async (req, res) => {
+    const query = req.query.nome;
+    if (!query) return res.json({ erro: "Diga o nome da música!" });
 
-        try {
-            const apiUrl = `https://drunk-loutitia-apigoku-de17d414.koyeb.app/play?nome=${encodeURIComponent(query)}`;
-            
-            // Aumentamos o tempo de espera para 60 segundos (timeout)
-            const response = await axios.get(apiUrl, { timeout: 60000 });
-            const data = response.data;
+    try {
+        const search = await yts(query);
+        const video = search.videos[0];
+        if (!video) return res.json({ erro: "Nada encontrado" });
 
-            if (data.erro) return sock.sendMessage(from, { text: "❌ Erro na API." });
+        // MOTOR DE DOWNLOAD EXTERNO (Muito mais rápido e estável)
+        const downloadUrl = `https://api.zenkey.my.id/api/download/ytmp3?url=${video.url}&apikey=zenkey`;
 
-            const legenda = `✨ *GOKU-API* ✨\n\n📝 *Títulos:* ${data.titulo}\n⏳ *Enviando arquivo...*`;
-
-            await sock.sendMessage(from, { image: { url: data.thumb }, caption: legenda }, { quoted: msg });
-
-            if (ehVideo) {
-                await sock.sendMessage(from, { 
-                    video: { url: data.download_video }, 
-                    mimetype: 'video/mp4',
-                    fileName: `${data.titulo}.mp4`
-                }, { quoted: msg });
-            } else {
-                await sock.sendMessage(from, { 
-                    audio: { url: data.download_audio }, 
-                    mimetype: 'audio/mp4',
-                    ptt: false, // Envia como música, não como gravador
-                    fileName: `${data.titulo}.mp3`
-                }, { quoted: msg });
-            }
-
-        } catch (e) {
-            console.log(e);
-            await sock.sendMessage(from, { text: "❌ Erro ao baixar o arquivo. Tente outra música!" });
-        }
+        res.json({
+            status: "Sucesso",
+            titulo: video.title,
+            duracao: video.timestamp,
+            views: video.views,
+            thumb: video.image,
+            canal: video.author.name,
+            download_audio: downloadUrl
+        });
+    } catch (e) {
+        res.json({ erro: "Erro ao processar busca" });
     }
-};
+});
+
+app.listen(PORT, '0.0.0.0', () => console.log(`Servidor Goku-API rodando na porta ${PORT}`));
