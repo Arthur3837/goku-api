@@ -3,7 +3,6 @@ const yts = require('yt-search');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// PÁGINA COM A IMAGEM DO GOKU ULTRA INSTINCT
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -13,11 +12,7 @@ app.get('/', (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>GOKU API</title>
             <style>
-                body, html {
-                    height: 100%;
-                    margin: 0;
-                    font-family: 'Segoe UI', sans-serif;
-                }
+                body, html { height: 100%; margin: 0; font-family: sans-serif; }
                 .bg {
                     background-image: url('https://i.ibb.co/LzN2pYp/IMG-20260121-WA0107.jpg');
                     height: 100%; 
@@ -29,18 +24,18 @@ app.get('/', (req, res) => {
                     align-items: center;
                 }
                 .card {
-                    background-color: rgba(0, 0, 0, 0.8);
+                    background-color: rgba(0, 0, 0, 0.85);
                     color: white;
                     padding: 30px;
                     text-align: center;
                     border-radius: 15px;
                     border: 2px solid #ff9100;
-                    box-shadow: 0 0 20px rgba(255, 145, 0, 0.5);
+                    box-shadow: 0 0 20px rgba(255, 145, 0, 0.6);
                     width: 80%;
                     max-width: 350px;
                 }
-                h1 { margin: 0; color: #ff9100; font-size: 24px; }
-                p { margin: 15px 0 0; font-size: 16px; line-height: 1.5; }
+                h1 { margin: 0; color: #ff9100; font-size: 26px; text-transform: uppercase; }
+                p { margin: 15px 0 0; font-size: 17px; }
                 .status { color: #ffff00; font-weight: bold; }
             </style>
         </head>
@@ -48,9 +43,9 @@ app.get('/', (req, res) => {
             <div class="bg">
                 <div class="card">
                     <h1>GOKU API</h1>
-                    <p>Dono: Arthur3837</p>
+                    <p>Dono: <b>Arthur3837</b></p>
                     <p>Status: <span class="status">ONLINE ⚡</span></p>
-                    <p>Comandos: <br> /play | /play4</p>
+                    <p style="font-size: 14px; color: #ccc;">Comandos: /play | /play4</p>
                 </div>
             </div>
         </body>
@@ -58,7 +53,6 @@ app.get('/', (req, res) => {
     `);
 });
 
-// COMANDO PLAY
 app.get(['/play', '/play4'], async (req, res) => {
     const query = req.query.nome;
     if (!query) return res.json({ erro: "Diga o nome da música!" });
