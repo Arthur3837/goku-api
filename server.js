@@ -1,43 +1,45 @@
-const express = require('express');
-const yts = require('yt-search');
 const axios = require('axios');
-const app = express();
 
-// O Koyeb usa a porta 8080 por padrão
-const PORT = process.env.PORT || 8080;
+module.exports = {
+    nome: ['play', 'play4', 'video', 'musica'],
+    async executar(sock, from, msg, args) {
+        const query = args.join(" ");
+        if (!query) return sock.sendMessage(from, { text: "⚠️ Digite o nome da música!" });
 
-app.get('/', (req, res) => {
-    res.send("GOKU-API ONLINE NO KOYEB! 🚀");
-});
+        const texto = (msg.message.conversation || msg.message.extendedTextMessage?.text || "").toLowerCase();
+        const ehVideo = texto.startsWith('/play4') || texto.startsWith('/video');
 
-app.get('/play', async (req, res) => {
-    const query = req.query.nome;
-    if (!query) return res.json({ erro: "Diga o nome da música!" });
+        try {
+            const apiUrl = `https://drunk-loutitia-apigoku-de17d414.koyeb.app/play?nome=${encodeURIComponent(query)}`;
+            
+            // Aumentamos o tempo de espera para 60 segundos (timeout)
+            const response = await axios.get(apiUrl, { timeout: 60000 });
+            const data = response.data;
 
-    try {
-        const search = await yts(query);
-        const video = search.videos[0];
-        if (!video) return res.json({ erro: "Nada encontrado." });
+            if (data.erro) return sock.sendMessage(from, { text: "❌ Erro na API." });
 
-        const urlYt = video.url;
+            const legenda = `✨ *GOKU-API* ✨\n\n📝 *Títulos:* ${data.titulo}\n⏳ *Enviando arquivo...*`;
 
-        // Enviando os dados para o seu Bot
-        res.json({
-            titulo: video.title,
-            nome_completo: video.title + " - " + video.author.name,
-            duracao: video.timestamp,
-            views: video.views,
-            thumb: video.image,
-            // Motor principal e backup
-            download_audio: `https://api.dreadful-api.site/api/ytdl?url=${urlYt}&type=audio`,
-            download_video: `https://api.dreadful-api.site/api/ytdl?url=${urlYt}&type=video`,
-            status: "Sucesso"
-        });
-    } catch (e) {
-        res.json({ erro: "Erro ao processar busca" });
+            await sock.sendMessage(from, { image: { url: data.thumb }, caption: legenda }, { quoted: msg });
+
+            if (ehVideo) {
+                await sock.sendMessage(from, { 
+                    video: { url: data.download_video }, 
+                    mimetype: 'video/mp4',
+                    fileName: `${data.titulo}.mp4`
+                }, { quoted: msg });
+            } else {
+                await sock.sendMessage(from, { 
+                    audio: { url: data.download_audio }, 
+                    mimetype: 'audio/mp4',
+                    ptt: false, // Envia como música, não como gravador
+                    fileName: `${data.titulo}.mp3`
+                }, { quoted: msg });
+            }
+
+        } catch (e) {
+            console.log(e);
+            await sock.sendMessage(from, { text: "❌ Erro ao baixar o arquivo. Tente outra música!" });
+        }
     }
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+};
